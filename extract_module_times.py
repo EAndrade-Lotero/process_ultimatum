@@ -268,13 +268,7 @@ def main() -> None:
     print(total_df)
 
     wrote_back_worker_ids = [
-        "69c0ae59e7e1aabc3d03cc78",
-        "69cc5b991e26f316db82dd76",
-        "5cab7cc86d3a6e001519d9e9",
-        "678adaaa5d10296603b4b2d6",
-        "629e9a5d81c583f5ebe90f05",
-        "65e8cf8f4c7424fa062e54a3",
-        "694332aee9accc7da4b9503e",
+        "5d0eecdd348afe00015865aa",
     ]
 
     returned_df = total_df[total_df["worker_id"].isin(wrote_back_worker_ids)]
