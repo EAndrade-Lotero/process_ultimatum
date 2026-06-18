@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """Participant survival analysis for the Ultimatum PsyNet export.
 
-Run with no arguments to read data from ``data_with_treatment_path.txt`` (or
-``data_path.txt``), print the survival table grouped by treatment when present,
-and write ``analysis/participant_survival.csv`` plus treatment-specific Sankey
-plots under ``analysis/``.
+Run with no arguments to read data from ``data_path.txt``, print the survival
+table, and write ``analysis/participant_survival.csv`` plus
+``analysis/participant_survival_sankey.svg``.
 """
 
 from __future__ import annotations
 
+import argparse
 import csv
 import html
 import json
@@ -17,15 +17,13 @@ from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any, Callable
 
-from extract_module_times import (
+from extract_module_times_no_websocket import (
     find_batch_dirs,
     find_treatment_dirs,
     get_data_root,
 )
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-DEFAULT_SURVIVAL_CSV = SCRIPT_DIR / "analysis" / "participant_survival.csv"
-DEFAULT_SANKEY_SVG = SCRIPT_DIR / "analysis" / "participant_survival_sankey.svg"
 TABLE_ALIASES: dict[str, tuple[str, ...]] = {
     "participant": ("participant", "Participant"),
     "sync_group": ("sync_group", "SimpleSyncGroup"),
@@ -40,7 +38,7 @@ TABLE_ALIASES: dict[str, tuple[str, ...]] = {
     "info": ("info", "GameTrial"),
     "response": ("response", "Response"),
     "module_state": ("module_state", "ModuleState"),
-    "waiting_trial": ("waiting_trial", "LobbyTrial"),
+    "waiting_trial": ("waiting_trial", "WaitingTrial"),
 }
 TIMESTAMP_KEYS = (
     "__barrier:chain_grouper__loop_start_time__loop_start_time",
@@ -81,12 +79,6 @@ def int_or_none(value: str | None) -> int | None:
     if value in (None, ""):
         return None
     return int(value)
-
-
-def numeric_int_or_none(value: str | None) -> int | None:
-    if value in (None, ""):
-        return None
-    return int(float(value))
 
 
 def parse_json(value: str | None, default: Any) -> Any:
@@ -210,32 +202,6 @@ def load_single_batch_export(
             game_trial_counts[
                 _remap_id(participant_id, participant_id_offset)
             ] += 1
-
-    for participant_id, row in participants.items():
-        ultimatum_rounds = numeric_int_or_none(row.get("ultimatum_counted_rounds"))
-        if ultimatum_rounds is not None and ultimatum_rounds > 0:
-            game_trial_counts[participant_id] = max(
-                game_trial_counts.get(participant_id, 0),
-                ultimatum_rounds,
-            )
-
-    for participant_id, rows in response_by_participant.items():
-        for response_row in rows:
-            if response_row.get("question") != "ultimatum_game":
-                continue
-            answer = parse_json(response_row.get("answer"), {})
-            if not isinstance(answer, dict):
-                continue
-            counted_rounds = numeric_int_or_none(
-                str(answer["counted_rounds"])
-                if answer.get("counted_rounds") is not None
-                else None
-            )
-            if counted_rounds is not None and counted_rounds > 0:
-                game_trial_counts[participant_id] = max(
-                    game_trial_counts.get(participant_id, 0),
-                    counted_rounds,
-                )
 
     return {
         "participants": participants,
@@ -401,15 +367,10 @@ def infer_missing_group_barrier(
         for barrier_id in (
             "init_participant",
             "prepare_trial",
-            "ultimatum_game_grouper",
-            "initialize_ultimatum_pair",
             "instructions_barrier",
             "adoption_barrier",
             "finished_trial",
             "chain_grouper",
-            "proposal_stage",
-            "inner_acceptance_stage",
-            "show_score",
         ):
             max_groupmate_count = max(
                 (
@@ -773,10 +734,6 @@ def participant_reached_waiting_pages(participant_id: int, export: dict[str, Any
     return participant_id in export.get("waiting_pages_participants", set())
 
 
-def participant_reached_strategy(participant_id: int, export: dict[str, Any]) -> bool:
-    return "Strategy" in participant_response_questions(participant_id, export)
-
-
 def participant_game_trial_count(participant_id: int, export: dict[str, Any]) -> int:
     return export.get("game_trial_counts", Counter()).get(participant_id, 0)
 
@@ -804,7 +761,6 @@ def survival_steps(export: dict[str, Any]) -> list[tuple[str, Callable[[int], bo
             )
         )
 
-    steps.append(("Strategy", lambda pid: participant_reached_strategy(pid, export)))
     return steps
 
 
@@ -872,7 +828,7 @@ def compress_survival_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     keep_indices = {0, len(rows) - 1}
     game_trial_milestone = re.compile(r"^game_game_trial_count_(\d+)$")
     for idx, row in enumerate(rows):
-        if row["step"] in {"conscent", "waitingPages", "Strategy"}:
+        if row["step"] in {"conscent", "waitingPages"}:
             keep_indices.add(idx)
         if row["dropped_since_previous"] > 0:
             keep_indices.add(idx)
@@ -904,8 +860,6 @@ def short_step_label(step: str) -> str:
         return "conscent"
     if step == "waitingPages":
         return "waitingPages"
-    if step == "Strategy":
-        return "Strategy"
     match = re.fullmatch(r"game_game_trial_count_(\d+)", step)
     if match:
         return f"game (trial {int(match.group(1))})"
@@ -957,7 +911,7 @@ def write_survival_sankey(
         '<text class="title" x="40" y="38">Participant Survival by Experiment Stage</text>',
         (
             f'<text class="small" x="40" y="60">N={total} across all batches. '
-            "Stages: conscent, waitingPages, game (by game_trial_count), Strategy. "
+            "Stages: conscent, waitingPages, game (by game_trial_count). "
             "Blue flows are survivors; orange branches are drop-offs."
             + (
                 " Compressed to stages with attrition or every 5th game trial."
@@ -1062,19 +1016,62 @@ def write_survival_csv(rows: list[dict[str, Any]], output_path: Path) -> None:
         writer.writerows(rows)
 
 
-def _sankey_output_path(treatment: str) -> Path:
+def _sankey_output_path(base_path: Path, treatment: str) -> Path:
     if not treatment:
-        return DEFAULT_SANKEY_SVG
-    return DEFAULT_SANKEY_SVG.with_name(
-        f"participant_survival_sankey_{treatment}.svg"
-    )
+        return base_path
+    return base_path.with_name(f"{base_path.stem}_{treatment}{base_path.suffix}")
 
 
 def main() -> None:
-    data_root = get_data_root()
+    parser = argparse.ArgumentParser(
+        description="Explain participant and sync-group failures in a PsyNet CSV export."
+    )
+    parser.add_argument(
+        "--data-dir",
+        type=Path,
+        default=None,
+        help=(
+            "Directory containing PsyNet CSV exports, or a parent directory with "
+            "batch-* subdirectories. Defaults to data_path.txt when present."
+        ),
+    )
+    parser.add_argument(
+        "--recent",
+        type=int,
+        default=5,
+        help="Number of recent barrier/trial rows to print for each participant/group.",
+    )
+    parser.add_argument(
+        "--report",
+        choices=("survival", "barriers", "sankey", "all"),
+        default="sankey",
+        help=(
+            "Which report to produce (default: sankey prints survival stats and "
+            "writes analysis/participant_survival.csv plus the Sankey SVG)."
+        ),
+    )
+    parser.add_argument(
+        "--sankey-output",
+        type=Path,
+        default=Path("analysis/participant_survival_sankey.svg"),
+        help="Path where the Sankey SVG should be written.",
+    )
+    parser.add_argument(
+        "--survival-csv-output",
+        type=Path,
+        default=Path("analysis/participant_survival.csv"),
+        help="Path where the full survival table should be written.",
+    )
+    parser.add_argument(
+        "--full-sankey",
+        action="store_true",
+        help="Include every milestone in the Sankey instead of compressing quiet stages.",
+    )
+    args = parser.parse_args()
+
+    data_root = args.data_dir or get_data_root()
     treatments = find_treatment_dirs(data_root)
     all_rows: list[dict[str, Any]] = []
-    sankey_paths: list[Path] = []
 
     for treatment, treatment_dir in treatments:
         export = load_export(treatment_dir)
@@ -1082,15 +1079,26 @@ def main() -> None:
         for row in survival_rows:
             row["treatment"] = treatment
         all_rows.extend(survival_rows)
-        print_survival_report(export, treatment_dir, treatment=treatment)
-        sankey_path = _sankey_output_path(treatment)
-        write_survival_sankey(export, sankey_path, compress=True)
-        sankey_paths.append(sankey_path)
 
-    write_survival_csv(all_rows, DEFAULT_SURVIVAL_CSV)
-    print(f"Wrote survival table to {DEFAULT_SURVIVAL_CSV}")
-    for sankey_path in sankey_paths:
-        print(f"Wrote Sankey plot to {sankey_path}")
+        if args.report in ("survival", "sankey", "all"):
+            print_survival_report(export, treatment_dir, treatment=treatment)
+        if args.report == "all":
+            print()
+        if args.report in ("barriers", "all"):
+            print_group_report(export, treatment_dir, args.recent)
+
+        if args.report in ("sankey", "all"):
+            sankey_path = _sankey_output_path(args.sankey_output, treatment)
+            write_survival_sankey(
+                export,
+                sankey_path,
+                compress=not args.full_sankey,
+            )
+            print(f"Wrote Sankey plot to {sankey_path}")
+
+    if args.report in ("sankey", "all"):
+        write_survival_csv(all_rows, args.survival_csv_output)
+        print(f"Wrote survival table to {args.survival_csv_output}")
 
 
 if __name__ == "__main__":

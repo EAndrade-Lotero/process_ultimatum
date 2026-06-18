@@ -1,0 +1,10 @@
+metric,value
+n_participants,45.0
+n_participants_with_personality_answers,40.0
+avg_personality_answers,6.177777777777778
+avg_personality_time_taken,19.0777
+pct_personality_round_formation,62.22222222222222
+n_participants_with_guessing_completed,10.0
+avg_guessing_attempts,13.888690476190476
+avg_guessing_time_taken,31.007535119047617
+pct_guessing_round_formation,52.94117647058824

@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Extract participant_id and time_taken from ModuleState.csv in batch-n directories."""
 
-import json
 import re
 from pathlib import Path
 from typing import Dict, Optional
@@ -12,7 +11,7 @@ TUTORIAL_TIME = 90
 HOURLY_PAYMENT = 25
 SECONDS_PER_HOUR = 3600
 BONUS_PER_SECOND = HOURLY_PAYMENT / SECONDS_PER_HOUR
-STAGE_ORDER = ("conscent", "waiting", "game", "strategy")
+STAGE_ORDER = ("conscent", "waiting", "game")
 STAGE_RANK = {stage: rank for rank, stage in enumerate(STAGE_ORDER)}
 REWARD = 6.25
 MIN_GAME_TRIAL_COUNT = 10
@@ -50,7 +49,6 @@ def _has_batch_dirs(path: Path) -> bool:
 
 
 def find_treatment_dirs(data_root: Path) -> list[tuple[str, Path]]:
-    """Return (treatment_name, path) for each treatment subfolder with batch exports."""
     treatments = [
         (child.name, child)
         for child in sorted(data_root.iterdir())
@@ -64,16 +62,11 @@ def find_treatment_dirs(data_root: Path) -> list[tuple[str, Path]]:
 
 
 def iter_treatment_batches(data_root: Path) -> list[tuple[str, Path]]:
-    """Return (treatment, batch_dir) for every batch export under data_root."""
     batches: list[tuple[str, Path]] = []
     for treatment, treatment_dir in find_treatment_dirs(data_root):
         for batch_dir in find_batch_dirs(treatment_dir):
             batches.append((treatment, batch_dir))
     return batches
-
-
-def has_treatment_grouping(data_root: Path) -> bool:
-    return any(name for name, _ in find_treatment_dirs(data_root))
 
 
 def find_csv_in_batch(batch_dir: Path, filename: str) -> Path:
@@ -98,7 +91,7 @@ def find_module_state_csv(batch_dir: Path) -> Path:
 
 
 def find_waiting_trial_csv(batch_dir: Path) -> Path:
-    return find_csv_in_batch(batch_dir, "LobbyTrial.csv")
+    return find_csv_in_batch(batch_dir, "WaitingTrial.csv")
 
 
 def find_game_trial_csv(batch_dir: Path) -> Path:
@@ -107,10 +100,6 @@ def find_game_trial_csv(batch_dir: Path) -> Path:
 
 def find_participant_csv(batch_dir: Path) -> Path:
     return find_csv_in_batch(batch_dir, "Participant.csv")
-
-
-def find_response_csv(batch_dir: Path) -> Path:
-    return find_csv_in_batch(batch_dir, "Response.csv")
 
 
 def load_batch_module_state(batch_dir: Path) -> pd.DataFrame:
@@ -160,33 +149,6 @@ def load_batch_game_trial(batch_dir: Path) -> pd.DataFrame:
     return grouped
 
 
-def _parse_metadata_time_taken(metadata: str) -> Optional[float]:
-    if pd.isna(metadata) or not metadata:
-        return None
-    try:
-        meta = json.loads(metadata)
-    except json.JSONDecodeError:
-        return None
-    time_taken = meta.get("time_taken")
-    return float(time_taken) if time_taken is not None else None
-
-
-def load_batch_strategy(batch_dir: Path) -> pd.DataFrame:
-    csv_path = find_response_csv(batch_dir)
-    df = pd.read_csv(csv_path, usecols=["participant_id", "question", "metadata_"])
-    df = df[df["question"] == "Strategy"].copy()
-    df["time_taken"] = df["metadata_"].map(_parse_metadata_time_taken)
-
-    grouped = (
-        df.groupby("participant_id", as_index=False)["time_taken"]
-        .sum()
-    )
-    grouped["batch_id"] = batch_dir.name
-    grouped["stage"] = "strategy"
-
-    return grouped
-
-
 def load_batch_game_trial_row_counts(batch_dir: Path) -> pd.DataFrame:
     csv_path = find_game_trial_csv(batch_dir)
     df = pd.read_csv(csv_path, usecols=["participant_id"])
@@ -223,21 +185,6 @@ def build_game_trial_times_dataframe(data_root: Optional[Path] = None) -> pd.Dat
     frames = []
     for treatment, batch_dir in batches:
         df = load_batch_game_trial(batch_dir)
-        df["treatment"] = treatment
-        frames.append(df)
-    return pd.concat(frames, ignore_index=True)
-
-
-def build_strategy_times_dataframe(data_root: Optional[Path] = None) -> pd.DataFrame:
-    root = data_root or get_data_root()
-    batches = iter_treatment_batches(root)
-
-    if not batches:
-        raise FileNotFoundError(f"No batch-n directories found in {root}")
-
-    frames = []
-    for treatment, batch_dir in batches:
-        df = load_batch_strategy(batch_dir)
         df["treatment"] = treatment
         frames.append(df)
     return pd.concat(frames, ignore_index=True)
@@ -310,24 +257,6 @@ def _time_taken_to_seconds(series: pd.Series) -> pd.Series:
     return series
 
 
-def _seconds_to_mmss(seconds: float) -> str:
-    total_seconds = int(round(seconds))
-    minutes, secs = divmod(total_seconds, 60)
-    return f"{minutes}:{secs:02d}"
-
-
-def _describe_seconds_as_mmss(series: pd.Series) -> pd.Series:
-    stats = series.describe()
-    return pd.Series(
-        {
-            label: int(stats[label])
-            if label == "count"
-            else _seconds_to_mmss(stats[label])
-            for label in stats.index
-        }
-    )
-
-
 def _last_stage_reached_by_participant(df: pd.DataFrame) -> pd.DataFrame:
     stage_ranks = df[["participant_id", "stage"]].copy()
     stage_ranks["stage_rank"] = stage_ranks["stage"].map(STAGE_RANK)
@@ -356,7 +285,6 @@ def build_participant_total_times_dataframe(
             load_batch_module_state,
             load_batch_waiting_trial,
             load_batch_game_trial,
-            load_batch_strategy,
         ):
             df = loader(batch_dir)
             normalized = df[["participant_id", "time_taken", "stage"]].copy()
@@ -393,27 +321,6 @@ def main() -> None:
     total_df["bonus"] = (total_df["time_taken"] * BONUS_PER_SECOND).round(2)
     print("Total time per participant:")
     print(total_df)
-
-    print("Time taken per participant:")
-    print(_describe_seconds_as_mmss(total_df["time_taken"]))
-
-    print("Number of participants per stage:")
-    print(total_df.groupby("last_stage_reached")["participant_id"].nunique())
-
-    game_or_strategy_worker_ids = total_df.loc[
-        total_df["last_stage_reached"].isin(["game", "strategy"]), "worker_id"
-    ].tolist()
-
-    print("Participants who reached game or strategy:")
-    for worker_id in game_or_strategy_worker_ids:
-        print(worker_id)
-    print(f"Total: {len(game_or_strategy_worker_ids)}")
-
-    print("Bonus for waiting participants:")
-    bonus_df = total_df[total_df["last_stage_reached"] == "waiting"]
-    for _, row in bonus_df.iterrows():
-        print(f"{row['worker_id']},{row['bonus']}")
-    print(f"Total: {bonus_df["participant_id"].nunique()}")
 
     wrote_back_worker_ids = [
         "5d0eecdd348afe00015865aa",
