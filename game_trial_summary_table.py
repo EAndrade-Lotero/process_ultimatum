@@ -16,7 +16,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from extract_module_times import find_batch_dirs, find_csv_in_batch, get_data_root
+from extract_module_times import find_csv_in_batch, get_data_root, iter_treatment_batches
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 OUTPUT_DIR = SCRIPT_DIR / "analysis"
@@ -99,10 +99,12 @@ def build_summary_table(participant_table: pd.DataFrame) -> pd.DataFrame:
                     {
                         "treatment": treatment,
                         "metric": [
+                            "Participant count",
                             "Accumulated score / total possible score",
                             "Overall Gini index",
                         ],
                         "value": [
+                            len(group),
                             group["score_ratio"].mean(),
                             gini_coefficient(group["accumulated_score"].tolist()),
                         ],
@@ -114,15 +116,23 @@ def build_summary_table(participant_table: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(
         {
             "metric": [
+                "Participant count",
                 "Accumulated score / total possible score",
                 "Overall Gini index",
             ],
             "value": [
+                len(participant_table),
                 participant_table["score_ratio"].mean(),
                 gini_coefficient(participant_table["accumulated_score"].tolist()),
             ],
         }
     )
+
+
+def _format_summary_value(row: pd.Series) -> str:
+    if row["metric"] == "Participant count":
+        return str(int(row["value"]))
+    return f"{row['value']:.4f}"
 
 
 def format_summary_table(summary: pd.DataFrame) -> str:
@@ -133,8 +143,7 @@ def format_summary_table(summary: pd.DataFrame) -> str:
             lines.append(f"{'Metric':<45} {'Value':>12}")
             lines.append("-" * 58)
             for _, row in group.iterrows():
-                value = f"{row['value']:.4f}"
-                lines.append(f"{row['metric']:<45} {value:>12}")
+                lines.append(f"{row['metric']:<45} {_format_summary_value(row):>12}")
         return "\n".join(lines).lstrip()
 
     lines = [
@@ -142,8 +151,7 @@ def format_summary_table(summary: pd.DataFrame) -> str:
         "-" * 58,
     ]
     for _, row in summary.iterrows():
-        value = f"{row['value']:.4f}"
-        lines.append(f"{row['metric']:<45} {value:>12}")
+        lines.append(f"{row['metric']:<45} {_format_summary_value(row):>12}")
     return "\n".join(lines)
 
 

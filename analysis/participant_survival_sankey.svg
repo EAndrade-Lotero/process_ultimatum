@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="980" height="979" viewBox="0 0 980 979">
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="1055" viewBox="0 0 980 1055">
 <style>
 text { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; fill: #222; }
 .small { font-size: 11px; }
@@ -7,60 +7,64 @@ text { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; f
 </style>
 <rect width="100%" height="100%" fill="white"/>
 <text class="title" x="40" y="38">Participant Survival by Experiment Stage</text>
-<text class="small" x="40" y="60">N=66 across all batches. Stages: conscent, waitingPages, game (by game_trial_count), Strategy. Blue flows are survivors; orange branches are drop-offs. Compressed to stages with attrition or every 5th game trial.</text>
-<path d="M 440.0 107.0 C 440.0 139.0, 440.0 139.0, 440.0 171.0" stroke="#4C78A8" stroke-width="360.00" fill="none" opacity="0.62" stroke-linecap="butt"/>
-<path d="M 431.8 183.0 C 431.8 215.0, 431.8 215.0, 431.8 247.0" stroke="#4C78A8" stroke-width="343.64" fill="none" opacity="0.62" stroke-linecap="butt"/>
-<path d="M 611.8 183.0 C 611.8 215.0, 698.2 215.0, 698.2 247.0" stroke="#F58518" stroke-width="16.36" fill="none" opacity="0.68" stroke-linecap="butt"/>
-<path d="M 423.6 259.0 C 423.6 291.0, 423.6 291.0, 423.6 323.0" stroke="#4C78A8" stroke-width="327.27" fill="none" opacity="0.62" stroke-linecap="butt"/>
-<path d="M 595.5 259.0 C 595.5 291.0, 698.2 291.0, 698.2 323.0" stroke="#F58518" stroke-width="16.36" fill="none" opacity="0.68" stroke-linecap="butt"/>
-<path d="M 423.6 335.0 C 423.6 367.0, 423.6 367.0, 423.6 399.0" stroke="#4C78A8" stroke-width="327.27" fill="none" opacity="0.62" stroke-linecap="butt"/>
-<path d="M 423.6 411.0 C 423.6 443.0, 423.6 443.0, 423.6 475.0" stroke="#4C78A8" stroke-width="327.27" fill="none" opacity="0.62" stroke-linecap="butt"/>
-<path d="M 418.2 487.0 C 418.2 519.0, 418.2 519.0, 418.2 551.0" stroke="#4C78A8" stroke-width="316.36" fill="none" opacity="0.62" stroke-linecap="butt"/>
-<path d="M 581.8 487.0 C 581.8 519.0, 695.5 519.0, 695.5 551.0" stroke="#F58518" stroke-width="10.91" fill="none" opacity="0.68" stroke-linecap="butt"/>
-<path d="M 418.2 563.0 C 418.2 595.0, 418.2 595.0, 418.2 627.0" stroke="#4C78A8" stroke-width="316.36" fill="none" opacity="0.62" stroke-linecap="butt"/>
-<path d="M 418.2 639.0 C 418.2 671.0, 418.2 671.0, 418.2 703.0" stroke="#4C78A8" stroke-width="316.36" fill="none" opacity="0.62" stroke-linecap="butt"/>
-<path d="M 412.7 715.0 C 412.7 747.0, 412.7 747.0, 412.7 779.0" stroke="#4C78A8" stroke-width="305.45" fill="none" opacity="0.62" stroke-linecap="butt"/>
-<path d="M 570.9 715.0 C 570.9 747.0, 695.5 747.0, 695.5 779.0" stroke="#F58518" stroke-width="10.91" fill="none" opacity="0.68" stroke-linecap="butt"/>
+<text class="small" x="40" y="60">N=58 across all batches. Stages: conscent, waitingPages, game (by game_trial_count), Strategy. Blue flows are survivors; orange branches are drop-offs. Compressed to stages with attrition or every 5th game trial.</text>
+<path d="M 427.6 107.0 C 427.6 139.0, 427.6 139.0, 427.6 171.0" stroke="#4C78A8" stroke-width="335.17" fill="none" opacity="0.62" stroke-linecap="butt"/>
+<path d="M 607.6 107.0 C 607.6 139.0, 702.4 139.0, 702.4 171.0" stroke="#F58518" stroke-width="24.83" fill="none" opacity="0.68" stroke-linecap="butt"/>
+<path d="M 424.5 183.0 C 424.5 215.0, 424.5 215.0, 424.5 247.0" stroke="#4C78A8" stroke-width="328.97" fill="none" opacity="0.62" stroke-linecap="butt"/>
+<path d="M 592.1 183.0 C 592.1 215.0, 693.1 215.0, 693.1 247.0" stroke="#F58518" stroke-width="6.21" fill="none" opacity="0.68" stroke-linecap="butt"/>
+<path d="M 409.0 259.0 C 409.0 291.0, 409.0 291.0, 409.0 323.0" stroke="#4C78A8" stroke-width="297.93" fill="none" opacity="0.62" stroke-linecap="butt"/>
+<path d="M 573.4 259.0 C 573.4 291.0, 705.5 291.0, 705.5 323.0" stroke="#F58518" stroke-width="31.03" fill="none" opacity="0.68" stroke-linecap="butt"/>
+<path d="M 390.3 335.0 C 390.3 367.0, 390.3 367.0, 390.3 399.0" stroke="#4C78A8" stroke-width="260.69" fill="none" opacity="0.62" stroke-linecap="butt"/>
+<path d="M 539.3 335.0 C 539.3 367.0, 708.6 367.0, 708.6 399.0" stroke="#F58518" stroke-width="37.24" fill="none" opacity="0.68" stroke-linecap="butt"/>
+<path d="M 390.3 411.0 C 390.3 443.0, 390.3 443.0, 390.3 475.0" stroke="#4C78A8" stroke-width="260.69" fill="none" opacity="0.62" stroke-linecap="butt"/>
+<path d="M 390.3 487.0 C 390.3 519.0, 390.3 519.0, 390.3 551.0" stroke="#4C78A8" stroke-width="260.69" fill="none" opacity="0.62" stroke-linecap="butt"/>
+<path d="M 390.3 563.0 C 390.3 595.0, 390.3 595.0, 390.3 627.0" stroke="#4C78A8" stroke-width="260.69" fill="none" opacity="0.62" stroke-linecap="butt"/>
+<path d="M 390.3 639.0 C 390.3 671.0, 390.3 671.0, 390.3 703.0" stroke="#4C78A8" stroke-width="260.69" fill="none" opacity="0.62" stroke-linecap="butt"/>
+<path d="M 390.3 715.0 C 390.3 747.0, 390.3 747.0, 390.3 779.0" stroke="#4C78A8" stroke-width="260.69" fill="none" opacity="0.62" stroke-linecap="butt"/>
+<path d="M 390.3 791.0 C 390.3 823.0, 390.3 823.0, 390.3 855.0" stroke="#4C78A8" stroke-width="260.69" fill="none" opacity="0.62" stroke-linecap="butt"/>
 <rect x="260" y="95" width="360.00" height="12" fill="#1F77B4" opacity="0.9"/>
 <text class="label" x="246" y="107.0" text-anchor="end">created</text>
-<text class="small" x="626.0" y="107.0">66 (100.0%)</text>
-<rect x="260" y="171" width="360.00" height="12" fill="#1F77B4" opacity="0.9"/>
+<text class="small" x="626.0" y="107.0">58 (100.0%)</text>
+<rect x="260" y="171" width="335.17" height="12" fill="#1F77B4" opacity="0.9"/>
+<rect x="690" y="171" width="24.83" height="12" fill="#E4572E" opacity="0.9"/>
+<text class="small" x="720.8" y="183.0">-4 (6.9%)</text>
 <text class="label" x="246" y="183.0" text-anchor="end">conscent</text>
-<text class="small" x="626.0" y="183.0">66 (100.0%)</text>
-<rect x="260" y="247" width="343.64" height="12" fill="#1F77B4" opacity="0.9"/>
-<rect x="690" y="247" width="16.36" height="12" fill="#E4572E" opacity="0.9"/>
-<text class="small" x="712.4" y="259.0">-3 (4.5%)</text>
+<text class="small" x="601.2" y="183.0">54 (93.1%)</text>
+<rect x="260" y="247" width="328.97" height="12" fill="#1F77B4" opacity="0.9"/>
+<rect x="690" y="247" width="6.21" height="12" fill="#E4572E" opacity="0.9"/>
+<text class="small" x="702.2" y="259.0">-1 (1.9%)</text>
 <text class="label" x="246" y="259.0" text-anchor="end">waitingPages</text>
-<text class="small" x="609.6" y="259.0">63 (95.5%)</text>
-<rect x="260" y="323" width="327.27" height="12" fill="#1F77B4" opacity="0.9"/>
-<rect x="690" y="323" width="16.36" height="12" fill="#E4572E" opacity="0.9"/>
-<text class="small" x="712.4" y="335.0">-3 (4.8%)</text>
+<text class="small" x="595.0" y="259.0">53 (91.4%)</text>
+<rect x="260" y="323" width="297.93" height="12" fill="#1F77B4" opacity="0.9"/>
+<rect x="690" y="323" width="31.03" height="12" fill="#E4572E" opacity="0.9"/>
+<text class="small" x="727.0" y="335.0">-5 (9.4%)</text>
 <text class="label" x="246" y="335.0" text-anchor="end">game (trial 1)</text>
-<text class="small" x="593.3" y="335.0">60 (90.9%)</text>
-<rect x="260" y="399" width="327.27" height="12" fill="#1F77B4" opacity="0.9"/>
-<text class="label" x="246" y="411.0" text-anchor="end">game (trial 5)</text>
-<text class="small" x="593.3" y="411.0">60 (90.9%)</text>
-<rect x="260" y="475" width="327.27" height="12" fill="#1F77B4" opacity="0.9"/>
-<text class="label" x="246" y="487.0" text-anchor="end">game (trial 10)</text>
-<text class="small" x="593.3" y="487.0">60 (90.9%)</text>
-<rect x="260" y="551" width="316.36" height="12" fill="#1F77B4" opacity="0.9"/>
-<rect x="690" y="551" width="10.91" height="12" fill="#E4572E" opacity="0.9"/>
-<text class="small" x="706.9" y="563.0">-2 (3.3%)</text>
-<text class="label" x="246" y="563.0" text-anchor="end">game (trial 15)</text>
-<text class="small" x="582.4" y="563.0">58 (87.9%)</text>
-<rect x="260" y="627" width="316.36" height="12" fill="#1F77B4" opacity="0.9"/>
-<text class="label" x="246" y="639.0" text-anchor="end">game (trial 20)</text>
-<text class="small" x="582.4" y="639.0">58 (87.9%)</text>
-<rect x="260" y="703" width="316.36" height="12" fill="#1F77B4" opacity="0.9"/>
-<text class="label" x="246" y="715.0" text-anchor="end">game (trial 25)</text>
-<text class="small" x="582.4" y="715.0">58 (87.9%)</text>
-<rect x="260" y="779" width="305.45" height="12" fill="#1F77B4" opacity="0.9"/>
-<rect x="690" y="779" width="10.91" height="12" fill="#E4572E" opacity="0.9"/>
-<text class="small" x="706.9" y="791.0">-2 (3.4%)</text>
-<text class="label" x="246" y="791.0" text-anchor="end">Strategy</text>
-<text class="small" x="571.5" y="791.0">56 (84.8%)</text>
-<rect x="40" y="934" width="16" height="10" fill="#1F77B4" opacity="0.9"/>
-<text class="small" x="62" y="943">survived to milestone</text>
-<rect x="220" y="934" width="16" height="10" fill="#E4572E" opacity="0.9"/>
-<text class="small" x="242" y="943">dropped before milestone</text>
+<text class="small" x="563.9" y="335.0">48 (82.8%)</text>
+<rect x="260" y="399" width="260.69" height="12" fill="#1F77B4" opacity="0.9"/>
+<rect x="690" y="399" width="37.24" height="12" fill="#E4572E" opacity="0.9"/>
+<text class="small" x="733.2" y="411.0">-6 (12.5%)</text>
+<text class="label" x="246" y="411.0" text-anchor="end">game (trial 2)</text>
+<text class="small" x="526.7" y="411.0">42 (72.4%)</text>
+<rect x="260" y="475" width="260.69" height="12" fill="#1F77B4" opacity="0.9"/>
+<text class="label" x="246" y="487.0" text-anchor="end">game (trial 5)</text>
+<text class="small" x="526.7" y="487.0">42 (72.4%)</text>
+<rect x="260" y="551" width="260.69" height="12" fill="#1F77B4" opacity="0.9"/>
+<text class="label" x="246" y="563.0" text-anchor="end">game (trial 10)</text>
+<text class="small" x="526.7" y="563.0">42 (72.4%)</text>
+<rect x="260" y="627" width="260.69" height="12" fill="#1F77B4" opacity="0.9"/>
+<text class="label" x="246" y="639.0" text-anchor="end">game (trial 15)</text>
+<text class="small" x="526.7" y="639.0">42 (72.4%)</text>
+<rect x="260" y="703" width="260.69" height="12" fill="#1F77B4" opacity="0.9"/>
+<text class="label" x="246" y="715.0" text-anchor="end">game (trial 20)</text>
+<text class="small" x="526.7" y="715.0">42 (72.4%)</text>
+<rect x="260" y="779" width="260.69" height="12" fill="#1F77B4" opacity="0.9"/>
+<text class="label" x="246" y="791.0" text-anchor="end">game (trial 25)</text>
+<text class="small" x="526.7" y="791.0">42 (72.4%)</text>
+<rect x="260" y="855" width="260.69" height="12" fill="#1F77B4" opacity="0.9"/>
+<text class="label" x="246" y="867.0" text-anchor="end">Strategy</text>
+<text class="small" x="526.7" y="867.0">42 (72.4%)</text>
+<rect x="40" y="1010" width="16" height="10" fill="#1F77B4" opacity="0.9"/>
+<text class="small" x="62" y="1019">survived to milestone</text>
+<rect x="220" y="1010" width="16" height="10" fill="#E4572E" opacity="0.9"/>
+<text class="small" x="242" y="1019">dropped before milestone</text>
 </svg>

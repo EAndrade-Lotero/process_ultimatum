@@ -1,0 +1,45 @@
+Strategy open-answer summary
+================================
+
+Total Strategy responses: 283
+Non-empty verbal answers: 270
+Empty verbal answers: 13
+
+Counts by treatment:
+  constant: 140 responses (134 with text)
+  random: 143 responses (136 with text)
+
+Most salient strategy themes
+----------------------------
+
+Responses often combine several themes. Counts below count participants whose answer mentions each theme at least once.
+
+  Adapting to partner behavior: 124 (45.9%)
+  Equal / 50-50 split: 108 (40.0%)
+  Fairness and trust: 80 (29.6%)
+  Rejection threshold (minimum acceptable offer): 38 (14.1%)
+  Probing for minimum acceptable offer: 24 (8.9%)
+  Accept most or all offers: 24 (8.9%)
+  Maximizing own payoff: 18 (6.7%)
+
+Qualitative synthesis
+--------------------
+
+1. Equal splitting was the dominant stated strategy. Many participants described offering or accepting a 50/50 division and sticking with it once accepted, treating equal splits as both fair and efficient.
+
+2. Fairness norms were widely invoked. Participants framed decisions in terms of equity, generosity, trust-building, and moral obligation, not only payoff maximization.
+
+3. Rejection thresholds were common among responders. A frequent rule was to reject offers below about 4-5 coins, using rejection to signal unacceptable lowball proposals or punish unfair partners.
+
+4. Proposers often probed for the minimum acceptable offer. Several participants tested progressively lower offers, searched for a 'sweet spot,' or alternated between low and higher offers to learn partner tolerance.
+
+5. Some participants prioritized any positive payoff. A smaller group reported accepting all or nearly all offers on the grounds that some coins are better than none.
+
+6. Adaptive play was salient. Many answers described watching the partner's behavior and adjusting offers or acceptance rules over rounds, including retaliation after unfair proposals.
+
+7. Explicit payoff maximization was less common in open text than fairness language, but still appeared when participants described keeping extra coins, offering as little as possible, or pushing for 7+ coins when in the responder role.
+
+Notable edge cases:
+- A few participants reported no strategy or gave very short answers.
+- Some answers described alternating patterns between two or three offer levels after finding an acceptable range.
+- Occasional end-game deviations appeared, such as taking one extra coin in the final round after maintaining fairness earlier.

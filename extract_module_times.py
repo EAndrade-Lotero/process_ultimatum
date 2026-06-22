@@ -20,6 +20,7 @@ MIN_GAME_TRIAL_COUNT = 10
 
 BATCH_DIR_PATTERN = re.compile(r"^batch-\d+$")
 TREATMENT_PATH_FILE = "data_with_treatment_path.txt"
+# TREATMENT_PATH_FILE = "data_path.txt"
 DATA_PATH_FILE = "data_path.txt"
 
 
