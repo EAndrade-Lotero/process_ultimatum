@@ -80,15 +80,8 @@ def _despine(ax: plt.Axes) -> None:
 
 def _acceptance_rate_data(rounds: pd.DataFrame, labels: list[str]) -> pd.DataFrame:
     filtered = rounds.loc[rounds["decision"].isin(labels)]
-    return pd.concat(
-        [
-            filtered.assign(
-                Decision=label,
-                Percentage=(filtered["decision"] == label).astype(float) * 100,
-            )
-            for label in labels
-        ],
-        ignore_index=True,
+    return filtered.assign(
+        Percentage=(filtered["decision"] == "accept").astype(float) * 100,
     )
 
 
@@ -187,25 +180,28 @@ def _annotate_accept_reject_proportion_tests(
     labels: list[str],
     *,
     treatments: list[str] | None = None,
+    label_y: float = 0.0,
 ) -> float:
     filtered = rounds.loc[rounds["decision"].isin(labels)]
-    label_y = 0.0
 
     if treatments:
-        for decision_idx, decision in enumerate(labels):
-            bars = [ax.containers[t_idx][decision_idx] for t_idx in range(len(treatments))]
-            x_center = sum(bar.get_x() + bar.get_width() / 2 for bar in bars) / len(bars)
-            y_top = _bar_group_top(ax, bars)
-            p_value = _treatment_outcome_pvalue(filtered, decision, treatments)
-            label_y = max(label_y, y_top + 3)
+        bars = list(ax.patches)
+        x_center = sum(bar.get_x() + bar.get_width() / 2 for bar in bars) / len(bars)
+        y_top = _bar_group_top(ax, bars)
+        p_value = _treatment_outcome_pvalue(filtered, "accept", treatments)
+        p_str = _format_pvalue(p_value)
+        if p_str:
+            label_y = max(y_top + 3, label_y)
             ax.text(
                 x_center,
-                y_top + 3,
-                _format_pvalue(p_value),
+                label_y,
+                p_str,
                 ha="center",
                 va="bottom",
                 fontsize=9,
             )
+            return label_y + 5
+        return label_y
     else:
         bars = [container[0] for container in ax.containers]
         x_center = sum(bar.get_x() + bar.get_width() / 2 for bar in bars) / len(bars)
@@ -323,6 +319,19 @@ def load_round_dataframe(
     return pd.DataFrame(rows)
 
 
+def normalize_round_index(rounds: pd.DataFrame) -> pd.DataFrame:
+    """Map engine round indices to 1..N counted rounds within each dyad."""
+    dyad_cols = ["treatment", "batch_id", "group_id"]
+    normalized = rounds.copy()
+    normalized["engine_round_index"] = normalized["round_index"]
+    normalized["round_index"] = (
+        normalized.groupby(dyad_cols, sort=False)["engine_round_index"]
+        .rank(method="first")
+        .astype(int)
+    )
+    return normalized
+
+
 def _accumulated_payoffs_from_history(history: list) -> dict[str, float]:
     totals: dict[str, float] = {}
     for round_row in history:
@@ -394,68 +403,98 @@ def plot_acceptance_rates(rounds: pd.DataFrame, output_path: Path) -> None:
         "treatment" in rounds.columns and rounds["treatment"].nunique() > 1
     )
     plot_data = _acceptance_rate_data(rounds, labels)
+    filtered = rounds.loc[rounds["decision"].isin(labels)]
     errorbar_kwargs = {
         "errorbar": ("ci", 95),
         "capsize": 0.1,
         "err_kws": {"linewidth": 1},
     }
+    treatment_order = [
+        treatment
+        for treatment in TREATMENT_PALETTE
+        if treatment in plot_data["treatment"].unique()
+    ]
 
     fig, ax = plt.subplots(figsize=(6.5, 4.0) if has_treatment else FIGURE_SIZE)
     if has_treatment:
-        treatment_order = [
-            treatment
-            for treatment in TREATMENT_PALETTE
-            if treatment in plot_data["treatment"].unique()
-        ]
         sns.barplot(
             data=plot_data,
-            x="Decision",
+            x="treatment",
             y="Percentage",
             hue="treatment",
             hue_order=treatment_order,
+            order=treatment_order,
             palette=TREATMENT_PALETTE,
-            width=0.7,
-            edgecolor="white",
-            linewidth=0.8,
-            ax=ax,
-            **errorbar_kwargs,
-        )
-        ax.legend(title="Treatment")
-        y_top = _annotate_accept_reject_proportion_tests(
-            ax, rounds, labels, treatments=treatment_order
-        )
-    else:
-        decision_counts = rounds.loc[rounds["decision"].isin(labels), "decision"].value_counts()
-        sns.barplot(
-            data=plot_data,
-            x="Decision",
-            y="Percentage",
-            hue="Decision",
-            palette=[PALETTE["accept"], PALETTE["reject"]],
+            legend=False,
             width=0.6,
             edgecolor="white",
             linewidth=0.8,
             ax=ax,
-            legend=False,
             **errorbar_kwargs,
         )
-        for container, label in zip(ax.containers, labels):
-            bar = container[0]
-            count = int(decision_counts.get(label, 0))
-            percentage = 100 * count / len(rounds) if len(rounds) else 0
+        label_y = 0.0
+        for bar, treatment in zip(ax.patches, treatment_order):
+            subset = filtered.loc[filtered["treatment"] == treatment]
+            n_accept = int((subset["decision"] == "accept").sum())
+            n_total = len(subset)
+            percentage = 100 * n_accept / n_total if n_total else 0
+            y_top = _bar_group_top(ax, [bar])
+            text_y = y_top + 2
             ax.text(
                 bar.get_x() + bar.get_width() / 2,
-                bar.get_height() + 2,
-                f"{percentage:.1f}%\n(n = {count})",
+                text_y,
+                f"{percentage:.1f}%\n(n = {n_accept})",
                 ha="center",
                 va="bottom",
                 fontsize=9,
             )
-        y_top = _annotate_accept_reject_proportion_tests(ax, rounds, labels)
+            label_y = max(label_y, text_y + 10)
+        y_top = _annotate_accept_reject_proportion_tests(
+            ax, rounds, labels, treatments=treatment_order, label_y=label_y
+        )
+    else:
+        plot_data = plot_data.assign(category="")
+        n_accept = int((filtered["decision"] == "accept").sum())
+        n_reject = int((filtered["decision"] == "reject").sum())
+        n_total = len(filtered)
+        sns.barplot(
+            data=plot_data,
+            x="category",
+            y="Percentage",
+            color=PALETTE["accept"],
+            width=0.6,
+            edgecolor="white",
+            linewidth=0.8,
+            ax=ax,
+            **errorbar_kwargs,
+        )
+        bar = ax.containers[0][0]
+        y_top = _bar_group_top(ax, [bar])
+        x = bar.get_x() + bar.get_width() / 2
+        percentage = 100 * n_accept / n_total if n_total else 0
+        p_value = _accept_reject_proportion_pvalue(n_accept, n_reject)
+        annotation_lines = [
+            f"{percentage:.1f}%",
+            f"(n = {n_accept})",
+        ]
+        p_str = _format_pvalue(p_value)
+        if p_str:
+            annotation_lines.append(p_str)
+        ax.text(
+            x,
+            y_top + 2,
+            "\n".join(annotation_lines),
+            ha="center",
+            va="bottom",
+            fontsize=9,
+        )
+        y_top = y_top + 2 + 5 * len(annotation_lines)
 
-    ax.set_ylabel("Percentage of offers (%)")
+    ax.set_ylabel("Acceptance rate (%)")
     ax.set_xlabel("")
-    ax.set_title("Offer decisions")
+    ax.set_title("Offer acceptance")
+    if not has_treatment:
+        ax.set_xticks([])
     ax.set_ylim(0, max(110, y_top))
     _despine(ax)
     _save_figure(fig, output_path)
@@ -824,6 +863,57 @@ def plot_accumulated_score_histogram(
     _save_figure(fig, output_path)
 
 
+def plot_offer_by_round(rounds: pd.DataFrame, output_path: Path) -> None:
+    has_treatment = (
+        "treatment" in rounds.columns and rounds["treatment"].nunique() > 1
+    )
+
+    fig, ax = plt.subplots(figsize=(6.5, 4.0) if has_treatment else FIGURE_SIZE)
+    if has_treatment:
+        treatment_order = [
+            treatment
+            for treatment in TREATMENT_PALETTE
+            if treatment in rounds["treatment"].unique()
+        ]
+        sns.lineplot(
+            data=rounds,
+            x="round_index",
+            y="offer",
+            hue="treatment",
+            hue_order=treatment_order,
+            palette=TREATMENT_PALETTE,
+            marker="o",
+            markersize=5,
+            linewidth=1.5,
+            errorbar=("ci", 95),
+            err_style="bars",
+            err_kws={"capsize": 3, "linewidth": 1},
+            ax=ax,
+        )
+        ax.legend(title="Treatment")
+    else:
+        sns.lineplot(
+            data=rounds,
+            x="round_index",
+            y="offer",
+            color=PALETTE["primary"],
+            marker="o",
+            markersize=5,
+            linewidth=1.5,
+            errorbar=("ci", 95),
+            err_style="bars",
+            err_kws={"capsize": 3, "linewidth": 1},
+            ax=ax,
+        )
+
+    ax.set_xlabel("Round")
+    ax.set_ylabel("Coins offered to responder")
+    ax.set_title("Mean offer by round")
+    ax.set_ylim(-0.05, TOTAL_COINS + 0.05)
+    _despine(ax)
+    _save_figure(fig, output_path)
+
+
 def plot_fairness_by_round(rounds: pd.DataFrame, output_path: Path) -> None:
     group_cols = ["treatment", "round_index"] if "treatment" in rounds.columns and rounds["treatment"].nunique() > 1 else ["round_index"]
     summary = (
@@ -1128,6 +1218,59 @@ def plot_efficiency_by_treatment(dyads: pd.DataFrame, output_path: Path) -> None
     _save_figure(fig, output_path)
 
 
+def plot_rejection_by_round(rounds: pd.DataFrame, output_path: Path) -> None:
+    plot_data = rounds.loc[rounds["decision"].isin(["accept", "reject"])].copy()
+    has_treatment = (
+        "treatment" in plot_data.columns and plot_data["treatment"].nunique() > 1
+    )
+
+    fig, ax = plt.subplots(figsize=(6.5, 4.0) if has_treatment else FIGURE_SIZE)
+    if has_treatment:
+        treatment_order = [
+            treatment
+            for treatment in TREATMENT_PALETTE
+            if treatment in plot_data["treatment"].unique()
+        ]
+        sns.lineplot(
+            data=plot_data,
+            x="round_index",
+            y="rejected",
+            hue="treatment",
+            hue_order=treatment_order,
+            palette=TREATMENT_PALETTE,
+            marker="o",
+            markersize=5,
+            linewidth=1.5,
+            errorbar=("ci", 95),
+            err_style="bars",
+            err_kws={"capsize": 3, "linewidth": 1},
+            ax=ax,
+        )
+        ax.legend(title="Treatment")
+    else:
+        sns.lineplot(
+            data=plot_data,
+            x="round_index",
+            y="rejected",
+            color=PALETTE["reject"],
+            marker="o",
+            markersize=5,
+            linewidth=1.5,
+            errorbar=("ci", 95),
+            err_style="bars",
+            err_kws={"capsize": 3, "linewidth": 1},
+            ax=ax,
+        )
+
+    ax.set_xlabel("Round")
+    ax.set_ylabel("Proportion rejected")
+    ax.set_title("Rejection rate by round")
+    ax.set_ylim(0, 1.05)
+    ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda y, _: f"{y:.0%}"))
+    _despine(ax)
+    _save_figure(fig, output_path)
+
+
 def plot_rejection_by_offer_and_round(rounds: pd.DataFrame, output_path: Path) -> None:
     group_cols = ["treatment", "offer"] if "treatment" in rounds.columns and rounds["treatment"].nunique() > 1 else ["offer"]
 
@@ -1220,7 +1363,7 @@ def main() -> None:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
     game_trials = load_game_trials(data_root)
-    rounds = load_round_dataframe(data_root, game_trials)
+    rounds = normalize_round_index(load_round_dataframe(data_root, game_trials))
     dyad_metrics = load_dyad_metrics_dataframe(data_root, game_trials)
 
     game_trials.to_csv(OUTPUT_DIR / "game_trials.csv", index=False)
@@ -1228,6 +1371,7 @@ def main() -> None:
 
     plot_acceptance_rates(rounds, OUTPUT_DIR / "acceptance_rates.png")
     plot_offer_histogram(rounds, OUTPUT_DIR / "offer_histogram.png")
+    plot_offer_by_round(rounds, OUTPUT_DIR / "offer_by_round.png")
     plot_accumulated_score_histogram(
         game_trials, OUTPUT_DIR / "accumulated_score_histogram.png"
     )
@@ -1239,6 +1383,7 @@ def main() -> None:
     plot_efficiency_by_treatment(
         dyad_metrics, OUTPUT_DIR / "efficiency_by_treatment.png"
     )
+    plot_rejection_by_round(rounds, OUTPUT_DIR / "rejection_by_round.png")
     plot_rejection_by_offer_and_round(
         rounds, OUTPUT_DIR / "rejection_by_offer_round.png"
     )
